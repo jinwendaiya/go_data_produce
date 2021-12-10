@@ -7,16 +7,9 @@ import (
 	"os"
 	"time"
 )
-
 type Package struct {
 	Date []byte
-
-
 }
-
-
-
-
 
 type Yaml struct {
 
