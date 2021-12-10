@@ -108,6 +108,9 @@ func (Pa *Packages)  GetErrDate(start ,end int) []byte {
 
 	}
 	y,_:=b.MarshalBinary()
+	//注意更改writeto方法，否则包大小有问题
+
+
 	Pa.Date=y
 	fmt.Println(Pa.Date)
 	fmt.Println("len:",len(Pa.Date))
