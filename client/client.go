@@ -38,8 +38,8 @@ var start ,end int
 func send(conn net.Conn ,a bytes.Buffer,o ,p string)  {
 	for  {
 
-
 		fmt.Println("大小",len(a.Bytes()))
+		//fmt.Println(a.Bytes())
 		n,err :=conn.Write(a.Bytes())
 
 		if err!=nil{
@@ -47,13 +47,13 @@ func send(conn net.Conn ,a bytes.Buffer,o ,p string)  {
 		}
 		fmt.Printf("客户端发送了%d字节的%s类%s数据\n",n,o,p)
 
-		time.Sleep(500 * time.Millisecond)    //设置发送速率保证程序不崩溃
+		time.Sleep(1500 * time.Millisecond)    //设置发送速率保证程序不崩溃
 		return
 	}
 }
 
 
-func (pa Packages) transform(messageid  uint32) *bytes.Buffer {
+func (pa *Packages) transform(messageid  uint32) *bytes.Buffer {
 
 	pa.MessageId = messageid
 	pa.Data_length = 467
@@ -65,7 +65,6 @@ func (pa Packages) transform(messageid  uint32) *bytes.Buffer {
 //r:=make([]byte,0)
 //buf:=bytes.NewBuffer(r)
 	var buf bytes.Buffer
-
 	binary.Write(&buf,binary.BigEndian,pa.Header1)
 	binary.Write(&buf,binary.BigEndian,pa.Header2)
 	binary.Write(&buf,binary.BigEndian,pa.MessageId)
@@ -81,6 +80,8 @@ func (pa Packages) transform(messageid  uint32) *bytes.Buffer {
 	binary.Write(&buf,binary.BigEndian,pa.Datepump)
 	binary.Write(&buf,binary.BigEndian,pa.VPC)
 	binary.Write(&buf,binary.BigEndian,pa.Data_CRC)
+
+	fmt.Println(buf.Bytes())
 
 	return &buf
 }
@@ -130,8 +131,20 @@ func main()  {
 	}
 
 	transferconf:=Conf.Yaml{}
-
+//
 	fconf:= Conf.Yaml{}
+	fconf.GPS.Start=12
+	fconf.GPS.End=30
+	fconf.IMU.Start=35
+	fconf.IMU.End=100
+	fconf.GLONASS.Start=100
+	fconf.GLONASS.End=1000
+	fconf.BD.Start=1000
+	fconf.BD.End=2000
+	fconf.ADS.Start=233
+	fconf.ADS.End=3000
+	fconf.ACU.Start=24
+	fconf.ACU.End=90
 
 	cp:=make(chan Conf.Yaml,1024)
 
@@ -142,7 +155,9 @@ func main()  {
 		for  {
 			select {
 			case transferconf = <-cp:
-				fmt.Println("配置已读取刷新")
+				//fmt.Println("配置已读取刷新")
+				//fmt.Println("等待")
+				fmt.Println("transferconf",transferconf)
 			}
 		}
 	}()
@@ -177,6 +192,8 @@ func main()  {
 						if ev.Op&fsnotify.Write == fsnotify.Write {
 							log.Println("写入文件 : ", ev.Name);
 							notify(transferconf,fconf)
+							fmt.Println("配置已读取刷新")
+							fmt.Println("fconf:",fconf)
 
 						}
 						if ev.Op&fsnotify.Remove == fsnotify.Remove {
@@ -204,6 +221,7 @@ func main()  {
 
 	}()
 
+	//notify(transferconf,fconf)
 
 	time.Sleep(3*time.Second)
 	fmt.Println(fconf)
@@ -285,6 +303,29 @@ func main()  {
 	PaGPSbuffer:=PaGPS.transform(4096)
 	PaIMUbuffer:= PaIMU.transform(4097)
 	PaBDbuffer :=PaBD.transform(4098)
+
+	//b:=bytes.NewBuffer(PaBDbuffer.Bytes())  //构造出bytes.Buffer{}
+	//
+	//pas:=Packages{}
+	//binary.Read(b, binary.BigEndian, &pas.Header1)
+	//binary.Read(b, binary.BigEndian, &pas.Header2)
+	//binary.Read(b, binary.BigEndian, &pas.MessageId)
+	//binary.Read(b, binary.BigEndian, &pas.Header3)
+	//binary.Read(b, binary.BigEndian, &pas.Header4)
+	//binary.Read(b, binary.BigEndian, &pas.Data_length)
+	//binary.Read(b, binary.BigEndian, &pas.Health_status)
+	//binary.Read(b, binary.BigEndian, &pas.Heart_status)
+	//pas.Date=PaBDbuffer.Bytes()[32:488]
+	////copy(pas.Date,sbyte[32:488])
+	//binary.Read(b, binary.BigEndian, &pas.SVPC)
+	//binary.Read(b, binary.BigEndian, &pas.Transmit_offset)
+	//binary.Read(b, binary.BigEndian, &pas.Receive_offset)
+	//binary.Read(b, binary.BigEndian, &pas.Datepump)
+	//binary.Read(b, binary.BigEndian, &pas.VPC)
+	//binary.Read(b, binary.BigEndian, &pas.Data_CRC)
+	//fmt.Println(pas)
+
+
 	PaGLONASSbuffer:=PaGLONASS.transform(4099)
 	PaADSbuffer:=PaADS.transform(4100)
 	PaACUbuffer:=PaACU.transform(4101)

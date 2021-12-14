@@ -16,7 +16,7 @@ type Packagess struct {
 	Data_length	uint32
 	Health_status	uint32
 	Heart_status	uint32
-	Date	[]byte
+	Data	[]byte
 	SVPC	uint32
 	Transmit_offset	uint32
 	Receive_offset	uint32
@@ -46,7 +46,7 @@ func process(conn net.Conn)  {
 	defer conn.Close()
 
 	for{
-		sbyte:=make([]byte,1024)
+		sbyte:=make([]byte,512)
 		fmt.Printf("\n服务器在等待客户端%s 发送信息\n", conn.RemoteAddr().String())
 		n, err:=conn.Read(sbyte)
 		if err!=nil{
@@ -57,21 +57,28 @@ func process(conn net.Conn)  {
 		//var b bytes.Buffer
 		b:=bytes.NewBuffer(sbyte)  //构造出bytes.Buffer{}
 		pas:=Packagess{}
-		binary.Read(b, binary.BigEndian, pas.Header1)
-		binary.Read(b, binary.BigEndian, pas.Header2)
-		binary.Read(b, binary.BigEndian, pas.MessageId)
-		binary.Read(b, binary.BigEndian, pas.Header3)
-		binary.Read(b, binary.BigEndian, pas.Header4)
-		binary.Read(b, binary.BigEndian, pas.Data_length)
-		binary.Read(b, binary.BigEndian, pas.Health_status)
-		binary.Read(b, binary.BigEndian, pas.Heart_status)
-		pas.Date=sbyte[9:465]
+		binary.Read(b, binary.BigEndian, &pas.Header1)
+		binary.Read(b, binary.BigEndian, &pas.Header2)
+		binary.Read(b, binary.BigEndian, &pas.MessageId)
+		binary.Read(b, binary.BigEndian, &pas.Header3)
+		binary.Read(b, binary.BigEndian, &pas.Header4)
+		binary.Read(b, binary.BigEndian, &pas.Data_length)
+		binary.Read(b, binary.BigEndian, &pas.Health_status)
+		binary.Read(b, binary.BigEndian, &pas.Heart_status)
+		pas.Data=sbyte[32:488]
+		//bytes.ReplaceAll(pas.Date,pas.Date[0],)
+		//copy(pas.Date,sbyte[32:488])
 		binary.Read(b, binary.BigEndian, pas.SVPC)
 		binary.Read(b, binary.BigEndian, pas.Transmit_offset)
 		binary.Read(b, binary.BigEndian, pas.Receive_offset)
 		binary.Read(b, binary.BigEndian, pas.Datepump)
 		binary.Read(b, binary.BigEndian, pas.VPC)
 		binary.Read(b, binary.BigEndian, pas.Data_CRC)
+		fmt.Println(sbyte[32])
+		//fmt.Println("pas.data",pas.Data)
+		fmt.Println("sbyte:",len(sbyte))
+		//fmt.Println("pas",len(pas))
+		fmt.Println(pas)
 		//dec := gob.NewDecoder(b)
 		//err=dec.Decode(pas)
 		//if err != nil {
@@ -81,7 +88,10 @@ func process(conn net.Conn)  {
 		fmt.Println(n)
 		//fmt.Printf("长度",len(b.Bytes()))
 		//fmt.Println(b.Bytes())
-		fmt.Printf("%#v\n",pas)
+		//fmt.Printf("%#v\n",pas)
+		//fmt.Println(pas)
+
+
 	}
 }
 
